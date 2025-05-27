@@ -29,7 +29,6 @@ type Jogo struct {
 
 // Elementos visuais do jogo
 var (
-
 	//elementos base
 	Personagem = Elemento{'☺', CorCinzaEscuro, CorPadrao, true}
 	Inimigo    = Elemento{'☠', CorVermelho, CorPadrao, true}
@@ -40,7 +39,6 @@ var (
 	//elementos adicionais
 	Portal	   = Elemento{'✷', CorAzul, CorPadrao, true}
 	Botao	   = Elemento{'⏺', CorVermelho, CorPadrao, true}
-
 )
 
 // Cria e retorna uma nova instância do jogo
