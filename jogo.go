@@ -20,22 +20,36 @@ type Jogo struct {
 	PosX, PosY      int          // posição atual do personagem
 	UltimoVisitado  Elemento     // elemento que estava na posição do personagem antes de mover
 	StatusMsg       string       // mensagem para a barra de status
+
+	BotaoBool		bool		 // boledano para ativação do botão
+	PortalAtivo		bool		 // variavel que verifica se os personagens clicaram no botão
+
 }
 
 // Elementos visuais do jogo
 var (
+
+	//elementos base
 	Personagem = Elemento{'☺', CorCinzaEscuro, CorPadrao, true}
 	Inimigo    = Elemento{'☠', CorVermelho, CorPadrao, true}
 	Parede     = Elemento{'▤', CorParede, CorFundoParede, true}
 	Vegetacao  = Elemento{'♣', CorVerde, CorPadrao, false}
 	Vazio      = Elemento{' ', CorPadrao, CorPadrao, false}
+
+	//elementos adicionais
+	Portal	   = Elemento{'✷', CorAzul, CorPadrao, true}
+	Botao	   = Elemento{'⊛', CorVermelho, CorPadrao, true}
 )
 
 // Cria e retorna uma nova instância do jogo
 func jogoNovo() Jogo {
 	// O ultimo elemento visitado é inicializado como vazio
 	// pois o jogo começa com o personagem em uma posição vazia
-	return Jogo{UltimoVisitado: Vazio}
+	return Jogo{
+		UltimoVisitado: Vazio,
+		BotaoBool: false,
+		PortalAtivo: false,
+	}
 }
 
 // Lê um arquivo texto linha por linha e constrói o mapa do jogo
@@ -54,6 +68,10 @@ func jogoCarregarMapa(nome string, jogo *Jogo) error {
 		for x, ch := range linha {
 			e := Vazio
 			switch ch {
+			case Portal.simbolo:
+				e = Portal
+			case Botao.simbolo:
+				e= Botao
 			case Parede.simbolo:
 				e = Parede
 			case Inimigo.simbolo:
@@ -105,4 +123,31 @@ func jogoMoverElemento(jogo *Jogo, x, y, dx, dy int) {
 	jogo.Mapa[y][x] = jogo.UltimoVisitado     // restaura o conteúdo anterior
 	jogo.UltimoVisitado = jogo.Mapa[ny][nx]   // guarda o conteúdo atual da nova posição
 	jogo.Mapa[ny][nx] = elemento              // move o elemento
+}
+
+func InimigoMover(jogo *Jogo) {
+	var inimigoDireita = true
+
+	for y := 0; y < len(jogo.Mapa); y++ {
+		for x := 0; x < len(jogo.Mapa[y]); x++ {
+			if jogo.Mapa[y][x] == Inimigo {
+				var nx int
+				if inimigoDireita {
+					nx = x + 1
+				} else {
+					nx = x - 1
+				}
+
+				// Verifica se pode se mover para o próximo ponto
+				if nx >= 0 && nx < len(jogo.Mapa[y]) && !jogo.Mapa[y][nx].tangivel {
+					jogo.Mapa[y][x] = Vazio           // limpa posição antiga
+					jogo.Mapa[y][nx] = Inimigo        // move inimigo
+				} else {
+					// Bateu na parede, muda direção
+					inimigoDireita = !inimigoDireita
+				}
+				return // só move o primeiro inimigo encontrado
+			}
+		}
+	}
 }

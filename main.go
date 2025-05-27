@@ -23,12 +23,20 @@ func main() {
 	// Desenha o estado inicial do jogo
 	interfaceDesenharJogo(&jogo)
 
-	// Loop principal de entrada
-	for {
-		evento := interfaceLerEventoTeclado()
-		if continuar := personagemExecutarAcao(evento, &jogo); !continuar {
-			break
-		}
-		interfaceDesenharJogo(&jogo)
+// Loop principal de entrada
+for {
+	evento := interfaceLerEventoTeclado()
+
+	// Executa ação do personagem e verifica se o jogo continua
+	if continuar := personagemExecutarAcao(evento, &jogo); !continuar {
+		break
 	}
+
+	// Move o inimigo após a ação do personagem
+	go InimigoMover(&jogo)
+
+	// Redesenha o estado atualizado do jogo
+	interfaceDesenharJogo(&jogo)
+}
+
 }
