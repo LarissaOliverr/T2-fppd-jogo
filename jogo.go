@@ -23,6 +23,7 @@ type Jogo struct {
 
 	BotaoBool		bool		 // boledano para ativação do botão
 	PortalAtivo		bool		 // variavel que verifica se os personagens clicaram no botão
+	InimigoDir      int          // direcional para movimento do inimigo
 
 }
 
@@ -38,7 +39,8 @@ var (
 
 	//elementos adicionais
 	Portal	   = Elemento{'✷', CorAzul, CorPadrao, true}
-	Botao	   = Elemento{'⊛', CorVermelho, CorPadrao, true}
+	Botao	   = Elemento{'⏺', CorVermelho, CorPadrao, true}
+
 )
 
 // Cria e retorna uma nova instância do jogo
@@ -49,6 +51,7 @@ func jogoNovo() Jogo {
 		UltimoVisitado: Vazio,
 		BotaoBool: false,
 		PortalAtivo: false,
+		InimigoDir: 1,
 	}
 }
 
@@ -126,28 +129,25 @@ func jogoMoverElemento(jogo *Jogo, x, y, dx, dy int) {
 }
 
 func InimigoMover(jogo *Jogo) {
-	var inimigoDireita = true
+	for y, linha := range jogo.Mapa {
+		for x, elem := range linha {
+			if elem.simbolo == Inimigo.simbolo {
+				nx := x + jogo.InimigoDir
 
-	for y := 0; y < len(jogo.Mapa); y++ {
-		for x := 0; x < len(jogo.Mapa[y]); x++ {
-			if jogo.Mapa[y][x] == Inimigo {
-				var nx int
-				if inimigoDireita {
-					nx = x + 1
-				} else {
-					nx = x - 1
+				if nx < 0 || nx >= len(jogo.Mapa[y]) || jogo.Mapa[y][nx].tangivel {
+					jogo.InimigoDir *= -1 // inverte direção
+					nx = x + jogo.InimigoDir
+					if nx < 0 || nx >= len(jogo.Mapa[y]) || jogo.Mapa[y][nx].tangivel {
+						return // ainda bloqueado
+					}
 				}
 
-				// Verifica se pode se mover para o próximo ponto
-				if nx >= 0 && nx < len(jogo.Mapa[y]) && !jogo.Mapa[y][nx].tangivel {
-					jogo.Mapa[y][x] = Vazio           // limpa posição antiga
-					jogo.Mapa[y][nx] = Inimigo        // move inimigo
-				} else {
-					// Bateu na parede, muda direção
-					inimigoDireita = !inimigoDireita
-				}
-				return // só move o primeiro inimigo encontrado
+				// Move o inimigo
+				jogo.Mapa[y][x] = Vazio
+				jogo.Mapa[y][nx] = Inimigo
+				return
 			}
 		}
 	}
 }
+

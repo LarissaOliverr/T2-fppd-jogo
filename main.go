@@ -1,7 +1,10 @@
 // main.go - Loop principal do jogo
 package main
 
-import "os"
+import (
+	"os"
+	"time"
+)
 
 func main() {
 	// Inicializa a interface (termbox)
@@ -23,20 +26,31 @@ func main() {
 	// Desenha o estado inicial do jogo
 	interfaceDesenharJogo(&jogo)
 
-// Loop principal de entrada
-for {
-	evento := interfaceLerEventoTeclado()
+// Canal de parada
+	stop := make(chan struct{})
 
-	// Executa ação do personagem e verifica se o jogo continua
-	if continuar := personagemExecutarAcao(evento, &jogo); !continuar {
-		break
+	// Goroutine que move o inimigo sozinho
+	go func() {
+		ticker := time.NewTicker(500 * time.Millisecond)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				InimigoMover(&jogo)
+				interfaceDesenharJogo(&jogo)
+			case <-stop:
+				return
+			}
+		}
+	}()
+
+	// Loop principal
+	for {
+		evento := interfaceLerEventoTeclado()
+		if continuar := personagemExecutarAcao(evento, &jogo); !continuar {
+			close(stop)
+			break
+		}
+		interfaceDesenharJogo(&jogo)
 	}
-
-	// Move o inimigo após a ação do personagem
-	go InimigoMover(&jogo)
-
-	// Redesenha o estado atualizado do jogo
-	interfaceDesenharJogo(&jogo)
-}
-
 }
