@@ -49,7 +49,7 @@ func personagemInteragir(jogo *Jogo) {
 					elem.cor = CorVerde
 				}
 
-				jogo.StatusMsg = "Você apertou o botão!"
+				ativarPortal(jogo)
 			}
 		}
 	}
