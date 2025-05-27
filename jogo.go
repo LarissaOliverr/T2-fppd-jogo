@@ -129,25 +129,35 @@ func jogoMoverElemento(jogo *Jogo, x, y, dx, dy int) {
 }
 
 func InimigoMover(jogo *Jogo) {
+	var novosInimigos []struct{ X, Y int }
+
+	// Primeiro, encontre todos os inimigos
 	for y, linha := range jogo.Mapa {
 		for x, elem := range linha {
 			if elem.simbolo == Inimigo.simbolo {
-				nx := x + jogo.InimigoDir
-
-				if nx < 0 || nx >= len(jogo.Mapa[y]) || jogo.Mapa[y][nx].tangivel {
-					jogo.InimigoDir *= -1 // inverte direção
-					nx = x + jogo.InimigoDir
-					if nx < 0 || nx >= len(jogo.Mapa[y]) || jogo.Mapa[y][nx].tangivel {
-						return // ainda bloqueado
-					}
-				}
-
-				// Move o inimigo
-				jogo.Mapa[y][x] = Vazio
-				jogo.Mapa[y][nx] = Inimigo
-				return
+				novosInimigos = append(novosInimigos, struct{ X, Y int }{x, y})
 			}
 		}
 	}
+
+	// Depois, tente mover cada um
+	for _, pos := range novosInimigos {
+		x, y := pos.X, pos.Y
+		nx := x + jogo.InimigoDir
+
+		if nx < 0 || nx >= len(jogo.Mapa[y]) || jogo.Mapa[y][nx].tangivel || jogo.Mapa[y][nx].simbolo == Inimigo.simbolo {
+			// Inverte direção se não puder andar
+			jogo.InimigoDir *= -1
+			nx = x + jogo.InimigoDir
+			if nx < 0 || nx >= len(jogo.Mapa[y]) || jogo.Mapa[y][nx].tangivel || jogo.Mapa[y][nx].simbolo == Inimigo.simbolo {
+				continue // ainda bloqueado
+			}
+		}
+
+		// Move o inimigo
+		jogo.Mapa[y][x] = Vazio
+		jogo.Mapa[y][nx] = Inimigo
+	}
 }
+
 
