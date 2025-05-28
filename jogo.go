@@ -37,7 +37,7 @@ var (
 	Vazio      = Elemento{' ', CorPadrao, CorPadrao, false}
 
 	//elementos adicionais
-	Portal	   = Elemento{'✷', CorAzul, CorPadrao, true}
+	Portal	   = Elemento{'✷', CorPadrao, CorPadrao, true}
 	Botao	   = Elemento{'⏺', CorVermelho, CorPadrao, true}
 )
 
