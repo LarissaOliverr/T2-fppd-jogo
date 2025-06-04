@@ -39,7 +39,7 @@ func personagemInteragir(jogo *Jogo) {
 		if y >= 0 && y < len(jogo.Mapa) && x >= 0 && x < len(jogo.Mapa[y]) {
 			elem := &jogo.Mapa[y][x]
 
-			// Verifica se é um botão (baseado no símbolo)
+			// Verifica se é um botão
 			if elem.simbolo == Botao.simbolo {
 				jogo.BotaoBool = !jogo.BotaoBool
 
@@ -51,8 +51,20 @@ func personagemInteragir(jogo *Jogo) {
 
 				ativarPortal(jogo)
 			}
+
+			// Verifica se é um portal
+			if elem.simbolo == Portal.simbolo {
+				if jogo.PortalAtivo == true {
+					jogo.StatusMsg = "Você escapou em segurança!"
+				} else {
+					jogo.StatusMsg = "Portal está desativado..."
+				}
+			}
+
 		}
 	}
+
+
 }
 
 // Processa o evento do teclado e executa a ação correspondente
