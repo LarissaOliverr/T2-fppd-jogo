@@ -2,11 +2,43 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"net/rpc"
 	"os"
 	"time"
 )
 
+type User struct {
+	ID				int			 // numero de identificação do usuario do servidor
+    PosX, PosY      int          // posição atual do personagem do usuario
+}
+
+type CreateUserRequest struct {
+    PosX, PosY      int          // posição atual do personagem do usuario
+}
+
+type GetUserRequest struct {
+    ID int
+}
+
 func main() {
+	if len(os.Args) < 2 {
+        fmt.Println("Uso: go run client.go <endereço:porta>")
+        os.Exit(1)
+    }
+
+    serverAddr := os.Args[1] // Ex: "localhost:1234"
+
+    client, err := rpc.Dial("tcp", serverAddr)
+    if err != nil {
+        log.Fatal("Erro ao conectar:", err)
+    }
+
+	createReq := CreateUserRequest{PosX: }
+
+
+
 	// Inicializa a interface (termbox)
 	interfaceIniciar()
 	defer interfaceFinalizar()
@@ -31,7 +63,7 @@ func main() {
 
 	// Goroutine que move o inimigo sozinho
 	go func() {
-		ticker := time.NewTicker(500 * time.Millisecond)
+		ticker := time.NewTicker(50 * time.Millisecond)
 		defer ticker.Stop()
 		for {
 			select {
