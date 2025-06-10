@@ -8,7 +8,7 @@ package jogo
 import (
 	"github.com/nsf/termbox-go"
 
-	shared "shared"
+	//shared "shared"
 )
 
 // Define um tipo Cor para encapsuladar as cores do termbox
