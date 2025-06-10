@@ -2,11 +2,14 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net/rpc"
 	"os"
+	"strings"
 	"time"
+
 )
 
 type User struct {
@@ -23,20 +26,28 @@ type GetUserRequest struct {
 }
 
 func main() {
-	if len(os.Args) < 2 {
-        fmt.Println("Uso: go run client.go <endereço:porta>")
-        os.Exit(1)
-    }
+if len(os.Args) < 2 {
+		fmt.Println("Uso: go run main.go <playerID>")
+		return
+	}
+	id := os.Args[1]
 
-    serverAddr := os.Args[1] // Ex: "localhost:1234"
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Digite o endereco do servidor: ")
+	endereco, _ := reader.ReadString('\n')
+	endereco = strings.TrimSpace(endereco)
 
-    client, err := rpc.Dial("tcp", serverAddr)
-    if err != nil {
-        log.Fatal("Erro ao conectar:", err)
-    }
+	client, err := rpc.Dial("tcp", endereco)
+	if err != nil {
+		log.Fatal("Erro ao conectar ao servidor RPC:", err)
+	}
 
-	createReq := CreateUserRequest{PosX: }
-
+	// registra o jogador apos conectar
+	var ok bool
+	err = client.Call("Servidor.RegistrarJogador", id, &ok)
+	if err != nil || !ok {
+		log.Fatalf("Erro ao registrar jogador.")
+	}
 
 
 	// Inicializa a interface (termbox)
