@@ -1,5 +1,5 @@
 // personagem.go - Funções para movimentação e ações do personagem
-package main
+package jogo
 
 // Atualiza a posição do personagem com base na tecla pressionada (WASD)
 func personagemMover(tecla rune, jogo *Jogo) {
