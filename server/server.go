@@ -73,7 +73,7 @@ func main() {
 	servidor := new(Servidor)
 
 	rpc.Register(servidor)
-	listener, err := net.Listen("tcp", ":8932")
+	listener, err := net.Listen("tcp", "0.0.0.0:8932")
 	if err != nil {
 		log.Fatal(err)
 	}
