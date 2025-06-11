@@ -86,10 +86,10 @@ func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo, client *rpc.Client, id
 		personagemInteragir(jogo)
 	case "mover":
 	// Move localmente
-	personagemMover(ev.Tecla, jogo)
+		personagemMover(ev.Tecla, jogo)
 
 	// Atualiza sequence e envia ao servidor
-	*sequence++
+	*sequence = *sequence + 1
 	mov := shared.Movimento{
 		ID:       id,
 		PosX:     jogo.PosX,
@@ -97,7 +97,7 @@ func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo, client *rpc.Client, id
 		Sequence: *sequence,
 	}
 	var ack bool
-	err := client.Call("Servidor.AtualizaPosicao", mov, &ack)
+	err := client.Call("Servidor.AtualizarMovimento", mov, &ack)
 	if err != nil {
 		log.Println("Erro ao atualizar posição no servidor:", err)
 	}

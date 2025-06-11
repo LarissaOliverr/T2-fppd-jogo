@@ -1,68 +1,83 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"jogo/shared"
 	"log"
 	"net"
 	"net/rpc"
 	"sync"
 )
 
-type User struct {
-	ID				int			 // numero de identificação do usuario do servidor
-    PosX, PosY      int          // posição atual do personagem do usuario
+type Servidor struct {
+	mu     sync.Mutex
+	estado shared.EstadoJogo
 }
 
-type CreateUserRequest struct {
-    PosX, PosY      int          // posição atual do personagem do usuario
+// RegistrarJogador adiciona um jogador ao estado do jogo
+func (s *Servidor) RegistrarJogador(id string, reply *bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.estado.Players == nil {
+		s.estado.Players = make(map[string]shared.EstadoPlayer)
+	}
+
+	// Evita duplicação
+	if _, existe := s.estado.Players[id]; !existe {
+		s.estado.Players[id] = shared.EstadoPlayer{
+			ID:       id,
+			PosX:     1,
+			PosY:     1,
+			Sequence: 0,
+		}
+	}
+
+	*reply = true
+	return nil
 }
 
-type GetUserRequest struct {
-    ID int
+// GetEstadoJogo retorna o estado atual do jogo
+func (s *Servidor) GetEstadoJogo(id string, estado *shared.EstadoJogo) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	*estado = s.estado
+	return nil
 }
 
-type UserService struct {
-    mu    sync.Mutex
-    users map[int]User
-    nextID int
-}
+// AtualizarMovimento permite que o cliente envie um movimento
+func (s *Servidor) AtualizarMovimento(mov shared.Movimento, reply *bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-func (s *UserService) CreateUser(req *CreateUserRequest, resp *User) error {
-    s.mu.Lock()
-    defer s.mu.Unlock()
+	player, ok := s.estado.Players[mov.ID]
+	if !ok {
+		*reply = false
+		return fmt.Errorf("jogador não encontrado")
+	}
 
-    s.nextID++
-    user := User{ID: s.nextID, PosX: req.PosX, PosY: req.PosY}
-    s.users[user.ID] = user
-    *resp = user
-    return nil
-}
+	// Atualiza se a sequência for mais nova
+	if mov.Sequence > player.Sequence {
+		player.PosX = mov.PosX
+		player.PosY = mov.PosY
+		player.Sequence = mov.Sequence
+		s.estado.Players[mov.ID] = player
+	}
 
-func (s *UserService) GetUser(req *GetUserRequest, resp *User) error {
-    s.mu.Lock()
-    defer s.mu.Unlock()
-
-    user, ok := s.users[req.ID]
-    if !ok {
-        return errors.New("usuário não encontrado")
-    }
-    *resp = user
-    return nil
+	*reply = true
+	return nil
 }
 
 func main() {
-    service := &UserService{
-        users: make(map[int]User),
-        nextID: 0,
-    }
+	servidor := new(Servidor)
 
-    rpc.Register(service)
-    listener, err := net.Listen("tcp", ":8932")
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Println("Servidor RPC iniciado em :8932")
+	rpc.Register(servidor)
+	listener, err := net.Listen("tcp", ":8932")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Servidor RPC iniciado em :8932")
 
 	for {
 		conn, err := listener.Accept()
@@ -71,5 +86,5 @@ func main() {
 			continue
 		}
 		go rpc.ServeConn(conn)
-    }
+	}
 }

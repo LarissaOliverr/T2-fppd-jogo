@@ -34,7 +34,7 @@ var (
 
 func main() {
 if len(os.Args) < 2 {
-		fmt.Println("Uso: go run main.go <playerID>")
+		fmt.Println("<playerID>")
 		return
 	}
 	id := os.Args[1]
@@ -99,7 +99,7 @@ if len(os.Args) < 2 {
 	interfaceDesenharJogo(&jogo, estado)
 
 
-// Canal de parada
+	// Canal de parada
 	stop := make(chan struct{})
 
 	// Goroutine que move o inimigo sozinho
