@@ -13,19 +13,6 @@ import (
 	"time"
 )
 
-type User struct {
-	ID				int			 // numero de identificação do usuario do servidor
-    PosX, PosY      int          // posição atual do personagem do usuario
-}
-
-type CreateUserRequest struct {
-    PosX, PosY      int          // posição atual do personagem do usuario
-}
-
-type GetUserRequest struct {
-    ID int
-}
-
 var (
 	mu          sync.Mutex
 	estadoAtual shared.EstadoJogo
@@ -33,8 +20,8 @@ var (
 
 
 func main() {
-if len(os.Args) < 2 {
-		fmt.Println("<playerID>")
+	if len(os.Args) < 2 {
+		fmt.Println("Use: jogo.exe <playerID>")
 		return
 	}
 	id := os.Args[1]
@@ -49,29 +36,27 @@ if len(os.Args) < 2 {
 		log.Fatal("Erro ao conectar ao servidor RPC:", err)
 	}
 
-	// registra o jogador apos conectar
 	var ok bool
 	err = client.Call("Servidor.RegistrarJogador", id, &ok)
 	if err != nil || !ok {
 		log.Fatalf("Erro ao registrar jogador.")
 	}
 
-
-	// Inicializa a interface (termbox)
 	interfaceIniciar()
 	defer interfaceFinalizar()
 
-	// Usa "mapa.txt" como arquivo padrão ou lê o primeiro argumento
 	mapaFile := "mapa.txt"
-	if len(os.Args) > 1 {
-		mapaFile = os.Args[1]
+	if len(os.Args) > 2 {
+		mapaFile = os.Args[2]
 	}
 
-	// Inicializa o jogo
 	jogo := jogoNovo()
 	if err := jogoCarregarMapa(mapaFile, &jogo); err != nil {
 		panic(err)
 	}
+
+	jogo.ID = id
+	jogo.Cliente = client
 
 	go func() {
 		for {
@@ -89,20 +74,10 @@ if len(os.Args) < 2 {
 		}
 	}()
 
-
-
-	// Desenha o estado inicial do jogo
-	mu.Lock()
-	estado := estadoAtual
-	mu.Unlock()
-
-	interfaceDesenharJogo(&jogo, estado)
-
-
-	// Canal de parada
+	// Loop principal
+	sequence := 0
 	stop := make(chan struct{})
 
-	// Goroutine que move o inimigo sozinho
 	go func() {
 		ticker := time.NewTicker(50 * time.Millisecond)
 		defer ticker.Stop()
@@ -110,6 +85,9 @@ if len(os.Args) < 2 {
 			select {
 			case <-ticker.C:
 				InimigoMover(&jogo)
+				mu.Lock()
+				estado := estadoAtual
+				mu.Unlock()
 				interfaceDesenharJogo(&jogo, estado)
 			case <-stop:
 				return
@@ -117,15 +95,16 @@ if len(os.Args) < 2 {
 		}
 	}()
 
-	// Loop principal
-	sequence := 0
 	for {
 		evento := interfaceLerEventoTeclado()
 		if continuar := personagemExecutarAcao(evento, &jogo, client, id, &sequence); !continuar {
 			close(stop)
 			break
 		}
+		jogoAtualizarEstadoMultiplayer(&jogo)
+		mu.Lock()
+		estado := estadoAtual
+		mu.Unlock()
 		interfaceDesenharJogo(&jogo, estado)
 	}
-
 }

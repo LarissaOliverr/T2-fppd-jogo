@@ -3,6 +3,9 @@ package main
 
 import (
 	"bufio"
+	"jogo/shared"
+	"log"
+	"net/rpc"
 	"os"
 )
 
@@ -24,6 +27,10 @@ type Jogo struct {
 	BotaoBool		bool		 // boledano para ativação do botão
 	PortalAtivo		bool		 // variavel que verifica se os personagens clicaram no botão
 	InimigoDir      int          // direcional para movimento do inimigo
+
+	Cliente *rpc.Client  // para comunicação com o servidor
+    ID      string       // identificador único do jogador
+    OutrosJogadores []shared.EstadoPlayer // para controlar os outros players
 
 }
 
@@ -157,5 +164,47 @@ func InimigoMover(jogo *Jogo) {
 		jogo.Mapa[y][nx] = Inimigo
 	}
 }
+
+func jogoAtualizarEstadoMultiplayer(jogo *Jogo) {
+	var estado shared.EstadoJogo
+	err := jogo.Cliente.Call("Servidor.GetEstadoJogo", jogo.ID, &estado)
+	if err != nil {
+		log.Println("Erro ao obter estado do servidor:", err)
+		return
+	}
+
+	// Atualizar mapa (se precisar)
+	// Aqui você pode atualizar seu mapa local se quiser, com base em estado.Mapa
+
+	// Atualiza jogadores locais
+	for id, p := range estado.Players {
+		if id == jogo.ID {
+			jogo.PosX = p.PosX
+			jogo.PosY = p.PosY
+		} else {
+			// Atualiza lista de outros jogadores
+			existe := false
+			for i, op := range jogo.OutrosJogadores {
+				if op.ID == id {
+					jogo.OutrosJogadores[i].PosX = p.PosX
+					jogo.OutrosJogadores[i].PosY = p.PosY
+					existe = true
+					break
+				}
+			}
+			if !existe {
+				jogo.OutrosJogadores = append(jogo.OutrosJogadores, shared.EstadoPlayer{
+					ID: id,
+					PosX: p.PosX,
+					PosY: p.PosY,
+					Sequence: p.Sequence,
+					// Simbolo: '☺', // ou algum símbolo diferente por jogador
+					// Cor: CorAzul,  // ou cor diferente para diferenciar
+				})
+			}
+		}
+	}
+}
+
 
 
