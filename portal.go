@@ -1,4 +1,4 @@
-package jogo
+package main
 
 
 func ativarPortal(jogo *Jogo) {

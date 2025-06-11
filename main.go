@@ -4,12 +4,13 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"jogo/shared"
 	"log"
 	"net/rpc"
 	"os"
 	"strings"
+	"sync"
 	"time"
-
 )
 
 type User struct {
@@ -24,6 +25,12 @@ type CreateUserRequest struct {
 type GetUserRequest struct {
     ID int
 }
+
+var (
+	mu          sync.Mutex
+	estadoAtual shared.EstadoJogo
+)
+
 
 func main() {
 if len(os.Args) < 2 {
@@ -66,8 +73,31 @@ if len(os.Args) < 2 {
 		panic(err)
 	}
 
+	go func() {
+		for {
+			var estado shared.EstadoJogo
+			err := client.Call("Servidor.GetEstadoJogo", id, &estado)
+			if err != nil {
+				log.Println("Erro ao obter estado do jogo:", err)
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
+			mu.Lock()
+			estadoAtual = estado
+			mu.Unlock()
+			time.Sleep(100 * time.Millisecond)
+		}
+	}()
+
+
+
 	// Desenha o estado inicial do jogo
-	interfaceDesenharJogo(&jogo)
+	mu.Lock()
+	estado := estadoAtual
+	mu.Unlock()
+
+	interfaceDesenharJogo(&jogo, estado)
+
 
 // Canal de parada
 	stop := make(chan struct{})
@@ -80,7 +110,7 @@ if len(os.Args) < 2 {
 			select {
 			case <-ticker.C:
 				InimigoMover(&jogo)
-				interfaceDesenharJogo(&jogo)
+				interfaceDesenharJogo(&jogo, estado)
 			case <-stop:
 				return
 			}
@@ -88,12 +118,14 @@ if len(os.Args) < 2 {
 	}()
 
 	// Loop principal
+	sequence := 0
 	for {
 		evento := interfaceLerEventoTeclado()
-		if continuar := personagemExecutarAcao(evento, &jogo); !continuar {
+		if continuar := personagemExecutarAcao(evento, &jogo, client, id, &sequence); !continuar {
 			close(stop)
 			break
 		}
-		interfaceDesenharJogo(&jogo)
+		interfaceDesenharJogo(&jogo, estado)
 	}
+
 }

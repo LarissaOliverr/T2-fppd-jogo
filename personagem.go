@@ -1,5 +1,11 @@
 // personagem.go - Funções para movimentação e ações do personagem
-package jogo
+package main
+
+import (
+	"jogo/shared"
+	"log"
+	"net/rpc"
+)
 
 // Atualiza a posição do personagem com base na tecla pressionada (WASD)
 func personagemMover(tecla rune, jogo *Jogo) {
@@ -68,17 +74,33 @@ func personagemInteragir(jogo *Jogo) {
 }
 
 // Processa o evento do teclado e executa a ação correspondente
-func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo) bool {
+func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo, client *rpc.Client, id string, sequence *int) bool {
 	switch ev.Tipo {
 	case "sair":
-		// Retorna false para indicar que o jogo deve terminar
-		return false
+	var ack bool
+	_ = client.Call("Servidor.DesconectarJogador", id, &ack)
+	return false
+
 	case "interagir":
 		// Executa a ação de interação
 		personagemInteragir(jogo)
 	case "mover":
-		// Move o personagem com base na tecla
-		personagemMover(ev.Tecla, jogo)
+	// Move localmente
+	personagemMover(ev.Tecla, jogo)
+
+	// Atualiza sequence e envia ao servidor
+	*sequence++
+	mov := shared.Movimento{
+		ID:       id,
+		PosX:     jogo.PosX,
+		PosY:     jogo.PosY,
+		Sequence: *sequence,
+	}
+	var ack bool
+	err := client.Call("Servidor.AtualizaPosicao", mov, &ack)
+	if err != nil {
+		log.Println("Erro ao atualizar posição no servidor:", err)
+	}
 	}
 	return true // Continua o jogo
 }
