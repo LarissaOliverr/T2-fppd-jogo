@@ -13,6 +13,11 @@ type EstadoJogo struct {
 	PortalAtivo  bool
 }
 
+type ComandoInteracao struct {
+    ID       string
+    Sequence int
+    Tipo     string 
+}
 
 type Movimento struct {
 	ID       string

@@ -11,10 +11,14 @@ import (
 func personagemMover(tecla rune, jogo *Jogo) {
 	dx, dy := 0, 0
 	switch tecla {
-	case 'w': dy = -1 // Move para cima
-	case 'a': dx = -1 // Move para a esquerda
-	case 's': dy = 1  // Move para baixo
-	case 'd': dx = 1  // Move para a direita
+	case 'w':
+		dy = -1 // Move para cima
+	case 'a':
+		dx = -1 // Move para a esquerda
+	case 's':
+		dy = 1 // Move para baixo
+	case 'd':
+		dx = 1 // Move para a direita
 	}
 
 	nx, ny := jogo.PosX+dx, jogo.PosY+dy
@@ -57,24 +61,24 @@ func personagemInteragir(jogo *Jogo) {
 
 				ativarPortal(jogo)
 
+				var ack bool
 				_ = jogo.Cliente.Call("Servidor.AtualizarEstadoLogico", shared.EstadoJogo{
 					BotaoAtivo:  jogo.BotaoBool,
 					PortalAtivo: jogo.PortalAtivo,
 				}, &ack)
 
-
-			// Verifica se é um portal
-			if elem.simbolo == Portal.simbolo {
-				if jogo.PortalAtivo == true {
-					jogo.StatusMsg = "Você escapou em segurança!"
-				} else {
-					jogo.StatusMsg = "Portal está desativado..."
+				// Verifica se é um portal
+				if elem.simbolo == Portal.simbolo {
+					if jogo.PortalAtivo == true {
+						jogo.StatusMsg = "Você escapou em segurança!"
+					} else {
+						jogo.StatusMsg = "Portal está desativado..."
+					}
 				}
 			}
 
 		}
 	}
-
 
 }
 
@@ -82,30 +86,30 @@ func personagemInteragir(jogo *Jogo) {
 func personagemExecutarAcao(ev EventoTeclado, jogo *Jogo, client *rpc.Client, id string, sequence *int) bool {
 	switch ev.Tipo {
 	case "sair":
-	var ack bool
-	_ = client.Call("Servidor.DesconectarJogador", id, &ack)
-	return false
+		var ack bool
+		_ = client.Call("Servidor.DesconectarJogador", id, &ack)
+		return false
 
 	case "interagir":
 		// Executa a ação de interação
 		personagemInteragir(jogo)
 	case "mover":
-	// Move localmente
+		// Move localmente
 		personagemMover(ev.Tecla, jogo)
 
-	// Atualiza sequence e envia ao servidor
-	*sequence = *sequence + 1
-	mov := shared.Movimento{
-		ID:       id,
-		PosX:     jogo.PosX,
-		PosY:     jogo.PosY,
-		Sequence: *sequence,
-	}
-	var ack bool
-	err := client.Call("Servidor.AtualizarMovimento", mov, &ack)
-	if err != nil {
-		log.Println("Erro ao atualizar posição no servidor:", err)
-	}
+		// Atualiza sequence e envia ao servidor
+		*sequence = *sequence + 1
+		mov := shared.Movimento{
+			ID:       id,
+			PosX:     jogo.PosX,
+			PosY:     jogo.PosY,
+			Sequence: *sequence,
+		}
+		var ack bool
+		err := client.Call("Servidor.AtualizarMovimento", mov, &ack)
+		if err != nil {
+			log.Println("Erro ao atualizar posição no servidor:", err)
+		}
 	}
 	return true // Continua o jogo
 }
