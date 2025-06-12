@@ -7,9 +7,12 @@ type EstadoPlayer struct {
 }
 
 type EstadoJogo struct {
-	Players map[string]EstadoPlayer
-	Mapa    [][]rune               
+	Players      map[string]EstadoPlayer
+	Mapa         [][]rune
+	BotaoAtivo   bool
+	PortalAtivo  bool
 }
+
 
 type Movimento struct {
 	ID       string

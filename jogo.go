@@ -173,10 +173,10 @@ func jogoAtualizarEstadoMultiplayer(jogo *Jogo) {
 		return
 	}
 
-	// Atualizar mapa (se precisar)
-	// Aqui você pode atualizar seu mapa local se quiser, com base em estado.Mapa
+	jogo.BotaoBool = estado.BotaoAtivo
+	jogo.PortalAtivo = estado.PortalAtivo
 
-	// Atualiza jogadores locais
+
 	for id, p := range estado.Players {
 		if id == jogo.ID {
 			jogo.PosX = p.PosX
@@ -198,12 +198,35 @@ func jogoAtualizarEstadoMultiplayer(jogo *Jogo) {
 					PosX: p.PosX,
 					PosY: p.PosY,
 					Sequence: p.Sequence,
-					// Simbolo: '☺', // ou algum símbolo diferente por jogador
-					// Cor: CorAzul,  // ou cor diferente para diferenciar
+					
 				})
 			}
 		}
 	}
+
+	for y := range jogo.Mapa {
+	for x := range jogo.Mapa[y] {
+		elem := &jogo.Mapa[y][x]
+
+		// Atualiza visual do botão
+		if elem.simbolo == Botao.simbolo {
+			if jogo.BotaoBool {
+				elem.cor = CorVerde
+			} else {
+				elem.cor = CorVermelho
+			}
+		}
+
+		// Atualiza visual do portal (opcional, por exemplo mudar cor quando ativo)
+		if elem.simbolo == Portal.simbolo {
+			if jogo.PortalAtivo {
+				elem.cor = CorVerde
+			} else {
+				elem.cor = CorPadrao
+			}
+		}
+	}
+}
 }
 
 

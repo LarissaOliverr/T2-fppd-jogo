@@ -56,7 +56,12 @@ func personagemInteragir(jogo *Jogo) {
 				}
 
 				ativarPortal(jogo)
-			}
+
+				_ = jogo.Cliente.Call("Servidor.AtualizarEstadoLogico", shared.EstadoJogo{
+					BotaoAtivo:  jogo.BotaoBool,
+					PortalAtivo: jogo.PortalAtivo,
+				}, &ack)
+
 
 			// Verifica se é um portal
 			if elem.simbolo == Portal.simbolo {

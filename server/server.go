@@ -46,6 +46,18 @@ func (s *Servidor) GetEstadoJogo(id string, estado *shared.EstadoJogo) error {
 	return nil
 }
 
+func (s *Servidor) AtualizarEstadoLogico(estadoLocal shared.EstadoJogo, reply *bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.estado.BotaoAtivo = estadoLocal.BotaoAtivo
+	s.estado.PortalAtivo = estadoLocal.PortalAtivo
+
+	*reply = true
+	return nil
+}
+
+
 // AtualizarMovimento permite que o cliente envie um movimento
 func (s *Servidor) AtualizarMovimento(mov shared.Movimento, reply *bool) error {
 	s.mu.Lock()
